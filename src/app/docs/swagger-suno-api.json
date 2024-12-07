@@ -36,7 +36,7 @@
                   "model": {
                     "type": "string",
                     "description": "Model name ,default is chirp-v3-5",
-                    "example": "chirp-v3-5|chirp-v3-0"
+                    "example": "chirp-v3-5"
                   },
                   "wait_audio": {
                     "type": "boolean",
@@ -156,7 +156,7 @@
                   "model": {
                     "type": "string",
                     "description": "Model name ,default is chirp-v3-5",
-                    "example": "chirp-v3-5|chirp-v3-0"
+                    "example": "chirp-v3-5"
                   },
                   "wait_audio": {
                     "type": "boolean",
@@ -234,7 +234,7 @@
                   "model": {
                     "type": "string",
                     "description": "Model name ,default is chirp-v3-5",
-                    "example": "chirp-v3-5|chirp-v3-0"
+                    "example": "chirp-v3-5"
                   }
                 }
               }

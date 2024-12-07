@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
-import { sunoApi } from "@/lib/SunoApi";
 import { corsHeaders } from "@/lib/utils";
+import { aceDataSunoApi } from "@/lib/AceDataSunoApi";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
       const body = await req.json();
       const { prompt } = body;
 
-      const lyrics = await (await sunoApi).generateLyrics(prompt);
+      const lyrics = await aceDataSunoApi.generateLyrics(prompt);
 
       return new NextResponse(JSON.stringify(lyrics), {
         status: 200,
@@ -20,9 +20,9 @@ export async function POST(req: NextRequest) {
         }
       });
     } catch (error: any) {
-      console.error('Error generating lyrics:', JSON.stringify(error.response.data));
+      console.error('Error generating lyrics:', error.message);
       if (error.response.status === 402) {
-        return new NextResponse(JSON.stringify({ error: error.response.data.detail }), {
+        return new NextResponse(JSON.stringify({ error: error.message }), {
           status: 402,
           headers: {
             'Content-Type': 'application/json',
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
           }
         });
       }
-      return new NextResponse(JSON.stringify({ error: 'Internal server error: ' + JSON.stringify(error.response.data.detail) }), {
+      return new NextResponse(JSON.stringify({ error: 'Internal server error: ' + error.message }), {
         status: 500,
         headers: {
           'Content-Type': 'application/json',

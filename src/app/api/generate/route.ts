@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
-import { DEFAULT_MODEL, sunoApi } from "@/lib/SunoApi";
+import { DEFAULT_MODEL } from "@/lib/SunoApi";
 import { corsHeaders } from "@/lib/utils";
+import { aceDataSunoApi } from "@/lib/AceDataSunoApi";
 
 export const dynamic = "force-dynamic";
 
@@ -8,13 +9,12 @@ export async function POST(req: NextRequest) {
   if (req.method === 'POST') {
     try {
       const body = await req.json();
-      const { prompt, make_instrumental, model, wait_audio } = body;
+      const { prompt, make_instrumental, model } = body;
 
-      const audioInfo = await (await sunoApi).generate(
+      const audioInfo = await aceDataSunoApi.generate(
         prompt,
         Boolean(make_instrumental),
         model || DEFAULT_MODEL,
-        Boolean(wait_audio)
       );
 
       return new NextResponse(JSON.stringify(audioInfo), {
@@ -25,9 +25,9 @@ export async function POST(req: NextRequest) {
         }
       });
     } catch (error: any) {
-      console.error('Error generating custom audio:', JSON.stringify(error.response.data));
+      console.error('Error generating custom audio:', error.message);
       if (error.response.status === 402) {
-        return new NextResponse(JSON.stringify({ error: error.response.data.detail }), {
+        return new NextResponse(JSON.stringify({ error: error.message }), {
           status: 402,
           headers: {
             'Content-Type': 'application/json',
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
           }
         });
       }
-      return new NextResponse(JSON.stringify({ error: 'Internal server error: ' + JSON.stringify(error.response.data.detail) }), {
+      return new NextResponse(JSON.stringify({ error: 'Internal server error: ' + error.message }), {
         status: 500,
         headers: {
           'Content-Type': 'application/json',
