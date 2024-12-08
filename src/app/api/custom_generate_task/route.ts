@@ -11,12 +11,12 @@ export async function POST(req: NextRequest) {
     try {
       const body = await req.json();
       const { prompt, tags, title, make_instrumental, model } = body;
-      const audioInfo = await aceDataSunoApi.custom_generate(
+      const task_id = await aceDataSunoApi.custom_generate_task(
         prompt, tags, title,
         Boolean(make_instrumental),
         model || DEFAULT_MODEL
       );
-      return new NextResponse(JSON.stringify(audioInfo), {
+      return new NextResponse(JSON.stringify({ task_id }), {
         status: 200,
         headers: {
           'Content-Type': 'application/json',
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
       });
     } catch (error: any) {
       return new NextResponse(JSON.stringify({ error: error.message }), {
-        status: 500,
+        status: 402,
         headers: {
           'Content-Type': 'application/json',
           ...corsHeaders
