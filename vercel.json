@@ -1,0 +1,10 @@
+{
+    "functions": {
+        "app/api/**/*": {
+            "maxDuration": 300
+        },
+        "api/**/*": {
+            "maxDuration": 300
+        }
+    }
+}
