@@ -2,6 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { corsHeaders } from "@/lib/utils";
 import { aceDataSunoApi } from "@/lib/AceDataSunoApi";
 
+export const maxDuration = 300;
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
