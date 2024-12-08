@@ -1,9 +1,5 @@
-import axios, { AxiosInstance } from 'axios';
-import UserAgent from 'user-agents';
 import pino from 'pino';
-import { wrapper } from 'axios-cookiejar-support';
 import { AudioInfo } from './models';
-import { Console } from 'console';
 
 const logger = pino();
 
@@ -43,8 +39,8 @@ class AceDataSunoApi {
 private async post(path: string, payload: AudioPayload | { prompt: string}): Promise<any> {
   const requestUrl = `${AceDataSunoApi.BASE_URL}${path}`;
   
-  console.log('Payload: ' + JSON.stringify(payload));
-  console.log('Request Url: ' + requestUrl);
+  logger.info('Payload: ' + JSON.stringify(payload));
+  logger.info('Request Url: ' + requestUrl);
 
   const options = {
     method: "post",
@@ -56,8 +52,20 @@ private async post(path: string, payload: AudioPayload | { prompt: string}): Pro
     body: JSON.stringify(payload)
   };
   
-  const response = await fetch(requestUrl, options);
-  console.log('response: ', JSON.stringify(response));
+  let response: Response;
+
+  try {
+    response = await fetch(requestUrl, options);
+    logger.info('Request Url: ' + requestUrl
+      + '; Response: ' + JSON.stringify(response)
+    );
+  }
+  catch (error) {
+    logger.info('Request Url: ' + requestUrl
+      + '; Response Error: ' + JSON.stringify(error)
+    );
+    throw error;
+  }
   
   if (response.status !== 200) {
     throw new Error('Error response:' + response.statusText);
