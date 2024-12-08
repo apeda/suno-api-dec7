@@ -432,9 +432,9 @@
         }
       }
     },
-    "/api/get_implementation": {
+    "/api/get_remote_config": {
       "get": {
-        "summary": "Get Implementation type",
+        "summary": "Get config",
         "tags": ["default"],
         "responses": {
           "200": {
@@ -444,7 +444,7 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "type": {
+                    "implementation": {
                       "type": "string",
                       "description": "Implementation type"
                     }

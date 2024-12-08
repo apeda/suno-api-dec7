@@ -6,7 +6,7 @@ export async function GET(req: NextRequest) {
   if (req.method === 'GET') {
     try {
       return new NextResponse(JSON.stringify({
-        type: process.env.IMPLEMENTATION_TYPE
+        implementation: process.env.IMPLEMENTATION_TYPE
       }), {
         status: 200,
         headers: {
