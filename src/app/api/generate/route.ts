@@ -3,6 +3,7 @@ import { DEFAULT_MODEL } from "@/lib/SunoApi";
 import { corsHeaders } from "@/lib/utils";
 import { aceDataSunoApi } from "@/lib/AceDataSunoApi";
 
+export const maxDuration = 180;
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
