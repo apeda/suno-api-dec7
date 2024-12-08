@@ -12,13 +12,13 @@ export async function POST(req: NextRequest) {
       const body = await req.json();
       const { prompt, make_instrumental, model } = body;
 
-      const task_id = await aceDataSunoApi.generate(
+      const audioInfo = await aceDataSunoApi.generate(
         prompt,
         Boolean(make_instrumental),
         model || DEFAULT_MODEL,
       );
 
-      return new NextResponse(JSON.stringify({ task_id }), {
+      return new NextResponse(JSON.stringify(audioInfo), {
         status: 200,
         headers: {
           'Content-Type': 'application/json',
