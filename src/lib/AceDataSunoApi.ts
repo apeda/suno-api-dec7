@@ -15,6 +15,12 @@ export enum Actions {
   extend = "extend"
 }
 
+export type GenerateTask = {
+  task_id: string;
+  success?: boolean;
+  audios?: AudioInfo[];
+}
+
 export type AudioPayload = {
   action: Actions;
   prompt?: string;
@@ -28,54 +34,22 @@ export type AudioPayload = {
   continue_at?: string;
 }
 
-class AceDataSunoApi {
-  private static BASE_URL: string = 'https://api.acedata.cloud/suno';
-  private currentToken?: string;
-
-  constructor(currentToken: string) {
-    this.currentToken = currentToken;
-  }
-
-private async post(path: string, payload: AudioPayload | { prompt: string}): Promise<any> {
-  const requestUrl = `${AceDataSunoApi.BASE_URL}${path}`;
-  
-  logger.info('Payload: ' + JSON.stringify(payload));
-  logger.info('Request Url: ' + requestUrl);
-
-  const options = {
-    method: "post",
-    headers: {
-      "accept": "application/json",
-      "authorization": `Bearer ${this.currentToken}`,
-      "content-type": "application/json"
-    },
-    body: JSON.stringify(payload)
-  };
-  
-  let response: Response;
-
-  try {
-    response = await fetch(requestUrl, options);
-    logger.info('Request Url: ' + requestUrl
-      + '; Response: ' + JSON.stringify(response)
-    );
-  }
-  catch (error) {
-    logger.info('Request Url: ' + requestUrl
-      + '; Response Error: ' + JSON.stringify(error)
-    );
-    throw error;
-  }
-  
-  if (response.status !== 200) {
-    throw new Error('Error response:' + response.statusText);
-  }
-
-  const json = await await response.json();
-  console.log('json: ', JSON.stringify(json));
-
-  return json;
+export type GenerateTaskPayload = AudioPayload & {
+  callback_url: string
 }
+
+// https://platform.acedata.cloud/documents/b0dd9823-0e01-4c75-af83-5a6e2e05bfed
+
+class AceDataSunoApi {
+  private currentToken: string;
+  private aceDataApiUrl: string;
+  private apiUrl: string;
+
+  constructor(currentToken: string, aceDataApiUrl: string, apiUrl: string) {
+    this.currentToken = currentToken;
+    this.aceDataApiUrl = aceDataApiUrl;
+    this.apiUrl = apiUrl;
+  }
 
   /**
    * Generate a song based on the prompt.
@@ -89,8 +63,6 @@ private async post(path: string, payload: AudioPayload | { prompt: string}): Pro
     make_instrumental: boolean = false,
     model?: string,
   ): Promise<AudioInfo[]> {
-    const startTime = Date.now();
-
     const payload: AudioPayload = {
       action: Actions.generate,
       custom: false,
@@ -98,32 +70,27 @@ private async post(path: string, payload: AudioPayload | { prompt: string}): Pro
       instrumental: make_instrumental,
       model: model as Models
     }
+    
+    return await this.generateSong(payload);
+  }
+
+  public async generate_task(
+    prompt: string,
+    make_instrumental: boolean = false,
+    model?: string,
+  ): Promise<string[]> {
+    const payload: GenerateTaskPayload = {
+      action: Actions.generate,
+      custom: false,
+      prompt: prompt,
+      instrumental: make_instrumental,
+      model: model as Models,
+      callback_url: `${this.apiUrl}/task_completed`
+    }
 
     const result = await this.post('/audios', payload);
     
-    const audios: AudioInfo[] = result.data.map((audio: any) => {
-      return {
-        id: audio.id,
-        title: audio.title,
-        image_url: audio.image_url,
-        lyric: this.parseLyrics(audio.lyric),
-        audio_url: audio.audio_url,
-        video_url: audio.video_url, 
-        created_at: audio.created_at, 
-        model_name: audio.model,
-        prompt: audio.prompt,
-        status: audio.state,
-        tags: audio.style,
-        duration: audio.duration,
-        task_id: result.task_id
-      };
-    });
-
-    const costTime = Date.now() - startTime;
-    logger.info('Generate Response:\n' + JSON.stringify(audios, null, 2));
-    logger.info('Cost time: ' + costTime);
-
-    return audios;
+    return result.task_id;
   }
 
   /**
@@ -144,8 +111,6 @@ private async post(path: string, payload: AudioPayload | { prompt: string}): Pro
     make_instrumental: boolean = false,
     model?: string
   ): Promise<AudioInfo[]> {
-    const startTime = Date.now();
-
     const payload: AudioPayload = {
       action: Actions.generate,
       custom: true,
@@ -156,31 +121,56 @@ private async post(path: string, payload: AudioPayload | { prompt: string}): Pro
       model: model as Models
     }
     
+    return await this.generateSong(payload);
+  }
+
+  public async custom_generate_task(
+    prompt: string,
+    tags: string,
+    title: string,
+    make_instrumental: boolean = false,
+    model?: string
+  ): Promise<string[]> {
+    const payload: GenerateTaskPayload = {
+      action: Actions.generate,
+      custom: true,
+      style: tags,
+      title: title,
+      lyric: prompt,
+      instrumental: make_instrumental,
+      model: model as Models,
+      callback_url: `${this.apiUrl}/task_completed`
+    }
+
     const result = await this.post('/audios', payload);
+    
+    return result.task_id;
+  }
 
-    const audios: AudioInfo[] = result.data.map((audio: any) => {
-      return {
-        id: audio.id,
-        title: audio.title,
-        image_url: audio.image_url,
-        lyric: this.parseLyrics(audio.lyric),
-        audio_url: audio.audio_url,
-        video_url: audio.video_url, 
-        created_at: audio.created_at, 
-        model_name: audio.model,
-        prompt: audio.prompt,
-        status: audio.state,
-        tags: audio.style,
-        duration: audio.duration,
-        task_id: result.task_id
-      };
-    });
-
-    const costTime = Date.now() - startTime;
-    logger.info('Generate Response:\n' + JSON.stringify(audios, null, 2));
-    logger.info('Cost time: ' + costTime);
-
-    return audios;
+  public async get_task(task_id: string): Promise<GenerateTask> {
+    const result = await this.post('/tasks', { id: task_id, action: 'retrieve' });
+    
+    return {
+      task_id: result.response.task_id,
+      success: result.response.success ?? false,
+      audios: result.response.data?.map((audio: any) => {
+        return {
+          id: audio.id,
+          title: audio.title,
+          image_url: audio.image_url,
+          lyric: this.parseLyrics(audio.lyric),
+          audio_url: audio.audio_url,
+          video_url: audio.video_url, 
+          created_at: audio.created_at, 
+          model_name: audio.model,
+          prompt: audio.prompt,
+          status: audio.state,
+          tags: audio.style,
+          duration: audio.duration,
+          task_id: result.task_id
+        };
+      })
+    };
   }
 
   /**
@@ -215,8 +205,6 @@ private async post(path: string, payload: AudioPayload | { prompt: string}): Pro
     title: string = '',
     model?: string
   ): Promise<AudioInfo> {
-    const startTime = Date.now();
-
     const payload: AudioPayload = {
       action: Actions.extend,
       audio_id: audioId,
@@ -228,7 +216,66 @@ private async post(path: string, payload: AudioPayload | { prompt: string}): Pro
       continue_at: continueAt,
     }
     
-    const result = await this.post('/lyrics', payload);
+    const songs = await this.generateSong(payload);
+
+    return songs[0];
+  }
+
+  private parseLyrics(prompt: string): string {
+    // Assuming the original lyrics are separated by a specific delimiter (e.g., newline), we can convert it into a more readable format.
+    // The implementation here can be adjusted according to the actual lyrics format.
+    // For example, if the lyrics exist as continuous text, it might be necessary to split them based on specific markers (such as periods, commas, etc.).
+    // The following implementation assumes that the lyrics are already separated by newlines.
+
+    // Split the lyrics using newline and ensure to remove empty lines.
+    const lines = prompt.split('\n').filter((line) => line.trim() !== '');
+
+    // Reassemble the processed lyrics lines into a single string, separated by newlines between each line.
+    // Additional formatting logic can be added here, such as adding specific markers or handling special lines.
+    return lines.join('\n');
+  }
+
+  private async post(path: string, payload: any): Promise<any> {
+    const requestUrl = `${this.aceDataApiUrl}${path}`;
+    
+    logger.info('Payload: ' + JSON.stringify(payload));
+    logger.info('Request Url: ' + requestUrl);
+
+    const options = {
+      method: "post",
+      headers: {
+        "accept": "application/json",
+        "authorization": `Bearer ${this.currentToken}`,
+        "content-type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    };
+    
+    let response: Response;
+
+    try {
+      response = await fetch(requestUrl, options);
+    }
+    catch (error) {
+      logger.info('Request Url: ' + requestUrl
+        + '; Response Error: ' + JSON.stringify(error)
+      );
+      throw error;
+    }
+    
+    if (response.status !== 200) {
+      throw new Error('Error response:' + response.statusText);
+    }
+
+    const json = await await response.json();
+
+    return json;
+  }
+
+  private async generateSong(payload: AudioPayload): Promise<AudioInfo[]> {
+    const startTime = Date.now();
+    
+    const result = await this.post('/audios', payload);
 
     const audios: AudioInfo[] = result.data.map((audio: any) => {
       return {
@@ -252,24 +299,14 @@ private async post(path: string, payload: AudioPayload | { prompt: string}): Pro
     logger.info('Generate Response:\n' + JSON.stringify(audios, null, 2));
     logger.info('Cost time: ' + costTime);
 
-    return audios[0];
-  }
-
-  private parseLyrics(prompt: string): string {
-    // Assuming the original lyrics are separated by a specific delimiter (e.g., newline), we can convert it into a more readable format.
-    // The implementation here can be adjusted according to the actual lyrics format.
-    // For example, if the lyrics exist as continuous text, it might be necessary to split them based on specific markers (such as periods, commas, etc.).
-    // The following implementation assumes that the lyrics are already separated by newlines.
-
-    // Split the lyrics using newline and ensure to remove empty lines.
-    const lines = prompt.split('\n').filter((line) => line.trim() !== '');
-
-    // Reassemble the processed lyrics lines into a single string, separated by newlines between each line.
-    // Additional formatting logic can be added here, such as adding specific markers or handling special lines.
-    return lines.join('\n');
+    return audios;
   }
 }
 
 console.log('token: ' + process.env.ACEDATA_TOKEN)
 
-export const aceDataSunoApi = new AceDataSunoApi(process.env.ACEDATA_TOKEN || '');
+export const aceDataSunoApi = new AceDataSunoApi(
+  process.env.ACEDATA_TOKEN || '',
+  process.env.ACEDATA_BASE_URL || '',
+  process.env.API_URL || '',
+);

@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { DEFAULT_MODEL } from "@/lib/SunoApi";
-import { aceDataSunoApi } from "@/lib/AceDataSunoApi";
 import { corsHeaders } from "@/lib/utils";
+import { aceDataSunoApi } from "@/lib/AceDataSunoApi";
 
 export const maxDuration = 300;
 export const dynamic = "force-dynamic";
@@ -10,12 +10,14 @@ export async function POST(req: NextRequest) {
   if (req.method === 'POST') {
     try {
       const body = await req.json();
-      const { prompt, tags, title, make_instrumental, model } = body;
-      const audioInfo = await aceDataSunoApi.custom_generate(
-        prompt, tags, title,
+      const { prompt, make_instrumental, model } = body;
+
+      const audioInfo = await aceDataSunoApi.generate_task(
+        prompt,
         Boolean(make_instrumental),
-        model || DEFAULT_MODEL
+        model || DEFAULT_MODEL,
       );
+
       return new NextResponse(JSON.stringify(audioInfo), {
         status: 200,
         headers: {
@@ -24,7 +26,7 @@ export async function POST(req: NextRequest) {
         }
       });
     } catch (error: any) {
-      return new NextResponse(JSON.stringify({ error: error.message }), {
+      return new NextResponse(JSON.stringify({ error: 'Internal server error: ' + error.message }), {
         status: 500,
         headers: {
           'Content-Type': 'application/json',
@@ -42,6 +44,7 @@ export async function POST(req: NextRequest) {
     });
   }
 }
+
 
 export async function OPTIONS(request: Request) {
   return new Response(null, {

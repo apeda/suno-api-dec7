@@ -12,13 +12,13 @@ export async function POST(req: NextRequest) {
       const body = await req.json();
       const { prompt, make_instrumental, model } = body;
 
-      const audioInfo = await aceDataSunoApi.generate(
+      const task_id = await aceDataSunoApi.generate(
         prompt,
         Boolean(make_instrumental),
         model || DEFAULT_MODEL,
       );
 
-      return new NextResponse(JSON.stringify(audioInfo), {
+      return new NextResponse(JSON.stringify({ task_id }), {
         status: 200,
         headers: {
           'Content-Type': 'application/json',
@@ -26,16 +26,6 @@ export async function POST(req: NextRequest) {
         }
       });
     } catch (error: any) {
-      console.error('Error generating custom audio:', error.message);
-      if (error.response.status === 402) {
-        return new NextResponse(JSON.stringify({ error: error.message }), {
-          status: 402,
-          headers: {
-            'Content-Type': 'application/json',
-            ...corsHeaders
-          }
-        });
-      }
       return new NextResponse(JSON.stringify({ error: 'Internal server error: ' + error.message }), {
         status: 500,
         headers: {
