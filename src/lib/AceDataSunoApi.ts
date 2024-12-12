@@ -38,6 +38,11 @@ export type GenerateTaskPayload = AudioPayload & {
   callback_url: string
 }
 
+export type Lyric = {
+  title: string,
+  text: string,
+}
+
 // https://platform.acedata.cloud/documents/b0dd9823-0e01-4c75-af83-5a6e2e05bfed
 
 class AceDataSunoApi {
@@ -178,13 +183,15 @@ class AceDataSunoApi {
    * @param prompt The prompt for generating lyrics.
    * @returns The generated lyrics text.
    */
-  public async generateLyrics(prompt: string): Promise<string> {
+  public async generateLyrics(prompt: string): Promise<Lyric> {
     // Initiate lyrics generation
 
     const result = await this.post('/lyrics', { prompt });
     
     // Return the generated lyrics text
-    return result.data.text;
+    return {
+      ...result.data
+    }
   }
 
   /**
