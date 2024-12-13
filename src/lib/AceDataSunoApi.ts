@@ -156,9 +156,9 @@ class AceDataSunoApi {
     const result = await this.post('/tasks', { id: task_id, action: 'retrieve' });
     
     return {
-      task_id: result.response.task_id,
-      success: result.response.success ?? false,
-      audios: result.response.data?.map((audio: any) => {
+      task_id: result.response?.task_id ?? task_id,
+      success: result.response?.success ?? false,
+      audios: result.response?.data?.map((audio: any) => {
         return {
           id: audio.id,
           title: audio.title,
