@@ -1,22 +1,13 @@
 import { NextResponse, NextRequest } from "next/server";
-import { DEFAULT_MODEL } from "@/lib/SunoApi";
-import { aceDataSunoApi } from "@/lib/AceDataSunoApi";
 import { corsHeaders } from "@/lib/utils";
-
-export const maxDuration = 300;
 export const dynamic = "force-dynamic";
 
-export async function POST(req: NextRequest) {
-  if (req.method === 'POST') {
+export async function GET(req: NextRequest) {
+  if (req.method === 'GET') {
     try {
-      const body = await req.json();
-      const { prompt, tags, title, make_instrumental, model } = body;
-      const audioInfo = await aceDataSunoApi.custom_generate(
-        prompt, tags, title,
-        Boolean(make_instrumental),
-        model || DEFAULT_MODEL
-      );
-      return new NextResponse(JSON.stringify(audioInfo), {
+      return new NextResponse(JSON.stringify({
+        implementation: process.env.IMPLEMENTATION_TYPE
+      }), {
         status: 200,
         headers: {
           'Content-Type': 'application/json',
@@ -24,7 +15,7 @@ export async function POST(req: NextRequest) {
         }
       });
     } catch (error: any) {
-      return new NextResponse(JSON.stringify({ error: error.message }), {
+      return new NextResponse(JSON.stringify({ error: 'Internal server error: ' + error.message }), {
         status: 500,
         headers: {
           'Content-Type': 'application/json',
@@ -35,13 +26,14 @@ export async function POST(req: NextRequest) {
   } else {
     return new NextResponse('Method Not Allowed', {
       headers: {
-        Allow: 'POST',
+        Allow: 'GET',
         ...corsHeaders
       },
       status: 405
     });
   }
 }
+
 
 export async function OPTIONS(request: Request) {
   return new Response(null, {

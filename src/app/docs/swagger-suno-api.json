@@ -36,12 +36,7 @@
                   "model": {
                     "type": "string",
                     "description": "Model name ,default is chirp-v3-5",
-                    "example": "chirp-v3-5|chirp-v3-0"
-                  },
-                  "wait_audio": {
-                    "type": "boolean",
-                    "description": "Whether to wait for music generation, default is false, directly return audio task information; set to true, will wait for up to 100s until the audio is generated.",
-                    "example": "false"
+                    "example": "chirp-v3-5"
                   }
                 }
               }
@@ -66,48 +61,6 @@
                         "$ref": "#/components/schemas/audio_info"
                       }
                     ]
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/chat/completions": {
-      "post": {
-        "summary": "Generate audio based on Prompt - OpenAI API format compatibility.",
-        "description": "Convert the `/api/generate` API to be compatible with the OpenAI `/v1/chat/completions` API format. \n\nGenerally used in OpenAI compatible clients.",
-        "tags": ["default"],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["prompt"],
-                "properties": {
-                  "prompt": {
-                    "type": "string",
-                    "description": "Prompt",
-                    "example": "A popular heavy metal song about war, sung by a deep-voiced male singer, slowly and melodiously. The lyrics depict the sorrow of people after the war."
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "string",
-                      "description": "Text description for music, with details like title, album cover, lyrics, and more."
-                    }
                   }
                 }
               }
@@ -156,12 +109,7 @@
                   "model": {
                     "type": "string",
                     "description": "Model name ,default is chirp-v3-5",
-                    "example": "chirp-v3-5|chirp-v3-0"
-                  },
-                  "wait_audio": {
-                    "type": "boolean",
-                    "description": "Whether to wait for music generation, default is false, directly return audio task information; set to true, will wait for up to 100s until the audio is generated.",
-                    "example": "false"
+                    "example": "chirp-v3-5"
                   }
                 }
               }
@@ -234,40 +182,11 @@
                   "model": {
                     "type": "string",
                     "description": "Model name ,default is chirp-v3-5",
-                    "example": "chirp-v3-5|chirp-v3-0"
+                    "example": "chirp-v3-5"
                   }
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "/api/generate_stems": {
-      "post": {
-        "summary": "Make stem tracks (separate audio and music track).",
-        "description": "Make stem tracks (separate audio and music track).",
-        "tags": ["default"],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["audio_id"],
-                "properties": {
-                  "audio_id": {
-                    "type": "string",
-                    "description": "The ID of the song to generate stems for.",
-                    "example": "e76498dc-6ab4-4a10-a19f-8a095790e28d"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "$ref": "#/components/schemas/audio_info"
           }
         }
       }
@@ -322,62 +241,38 @@
         }
       }
     },
-    "/api/get": {
-      "get": {
-        "summary": "Get audio information",
-        "description": "",
+    "/api/generate_task": {
+      "post": {
+        "summary": "Generate audio based on Prompt.",
+        "description": "It will automatically fill in the lyrics.\n\n2 audio files will be generated for each request, consuming a total of 10 credits.\n\n`wait_audio` can be set to API mode:\n\n\u2022 By default, it is set to `false`, which indicates the background mode. It will only return audio task information, and you will need to call the get API to retrieve detailed audio information.\n\n\u2022 If set to `true`, it simulates synchronous mode. The API will wait for a maximum of 100s until the audio is generated, and will directly return the audio link and other information. Recommend using in GPTs and other agents.",
         "tags": ["default"],
-        "parameters": [
-          {
-            "in": "query",
-            "name": "ids",
-            "description": "Audio IDs, separated by commas. Leave blank to return a list of all music.",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "page",
-            "description": "Page number",
-            "required": false,
-            "schema": {
-              "type": "number"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "required": ["0", "1"],
-                    "properties": [
-                      {
-                        "$ref": "#/components/schemas/audio_info"
-                      },
-                      {
-                        "$ref": "#/components/schemas/audio_info"
-                      }
-                    ]
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["prompt", "make_instrumental", "wait_audio"],
+                "properties": {
+                  "prompt": {
+                    "type": "string",
+                    "description": "Prompt",
+                    "example": "A popular heavy metal song about war, sung by a deep-voiced male singer, slowly and melodiously. The lyrics depict the sorrow of people after the war."
+                  },
+                  "make_instrumental": {
+                    "type": "boolean",
+                    "description": "Whether to generate instrumental music",
+                    "example": "false"
+                  },
+                  "model": {
+                    "type": "string",
+                    "description": "Model name ,default is chirp-v3-5",
+                    "example": "chirp-v3-5"
                   }
                 }
               }
             }
           }
-        }
-      }
-    },
-    "/api/get_limit": {
-      "get": {
-        "summary": "Get quota information.",
-        "description": "",
-        "tags": ["default"],
+        },
         "responses": {
           "200": {
             "description": "success",
@@ -385,28 +280,10 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": [
-                    "credits_left",
-                    "period",
-                    "monthly_limit",
-                    "monthly_usage"
-                  ],
                   "properties": {
-                    "credits_left": {
-                      "type": "number",
-                      "description": "Remaining credits,Each generated audio consumes 5 credits."
-                    },
-                    "period": {
+                    "task_id": {
                       "type": "string",
-                      "description": "Period"
-                    },
-                    "monthly_limit": {
-                      "type": "number",
-                      "description": "Monthly limit"
-                    },
-                    "monthly_usage": {
-                      "type": "number",
-                      "description": "Monthly usage"
+                      "description": "Task Id"
                     }
                   }
                 }
@@ -416,40 +293,84 @@
         }
       }
     },
-    "/api/get_aligned_lyrics": {
-      "get": {
-        "summary": "Get lyric alignment.",
-        "description": "Get lyric alignment.",
+    "/api/custom_generate_task": {
+      "post": {
+        "summary": "Generate Audio - Custom Mode",
+        "description": "The custom mode enables users to provide additional details about the music, such as music genre, lyrics, and more.\n\n 2 audio files will be generated for each request, consuming a total of 10 credits. \n\n `wait_audio` can be set to API mode:\n\n\u2022 By default, it is set to false, which indicates the background mode. It will only return audio task information, and you will need to call the get API to retrieve detailed audio information.\n\n\u2022 If set to true, it simulates synchronous mode. The API will wait for a maximum of 100s until the audio is generated, and will directly return the audio link and other information. Recommend using in GPTs and other agents.",
         "tags": ["default"],
-        "parameters": [
-          {
-            "name": "song_id",
-            "in": "query",
-            "required": true,
-            "description": "Song ID",
-            "schema": {
-              "type": "string"
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["prompt", "tags", "title"],
+                "properties": {
+                  "prompt": {
+                    "type": "string",
+                    "description": "Detailed prompt, including information such as music lyrics.",
+                    "example": "[Verse 1]\nCruel flames of war engulf this land\nBattlefields filled with death and dread\nInnocent souls in darkness, they rest\nMy heart trembles in this silent test\n\n[Verse 2]\nPeople weep for loved ones lost\nBattered bodies bear the cost\nSeeking peace and hope once known\nOur grief transforms to hearts of stone\n\n[Chorus]\nSilent battlegrounds, no birds' song\nShadows of war, where we don't belong\nMay flowers of peace bloom in this place\nLet's guard this precious dream with grace\n\n[Bridge]\nThrough the ashes, we will rise\nHand in hand, towards peaceful skies\nNo more sorrow, no more pain\nTogether, we'll break these chains\n\n[Chorus]\nSilent battlegrounds, no birds' song\nShadows of war, where we don't belong\nMay flowers of peace bloom in this place\nLet's guard this precious dream with grace\n\n[Outro]\nIn unity, our strength will grow\nA brighter future, we'll soon know\nFrom the ruins, hope will spring\nA new dawn, we'll together bring"
+                  },
+                  "tags": {
+                    "type": "string",
+                    "description": "Music genre",
+                    "example": "pop metal male melancholic"
+                  },
+                  "negative_tags": {
+                    "type": "string",
+                    "description": "Negative Music genre",
+                    "example": "female edm techno"
+                  },
+                  "title": {
+                    "type": "string",
+                    "description": "Music title",
+                    "example": "Silent Battlefield"
+                  },
+                  "make_instrumental": {
+                    "type": "boolean",
+                    "description": "Whether to generate instrumental music",
+                    "example": "false"
+                  },
+                  "model": {
+                    "type": "string",
+                    "description": "Model name ,default is chirp-v3-5",
+                    "example": "chirp-v3-5"
+                  }
+                }
+              }
             }
           }
-        ],
+        },
         "responses": {
           "200": {
-            "$ref": "#/components/schemas/audio_info"
+            "description": "success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "task_id": {
+                      "type": "string",
+                      "description": "Task Id"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
     },
-    "/api/clip": {
+    "/api/get_task": {
       "get": {
-        "summary": "Get clip information based on ID.",
-        "description": "Retrieve specific clip information using the provided clip ID as a query parameter.",
+        "summary": "Get Task Info",
+        "description": "Retrieve specific task information using the provided task ID as a query parameter.",
         "tags": ["default"],
         "parameters": [
           {
             "name": "id",
             "in": "query",
             "required": true,
-            "description": "Clip ID",
+            "description": "Task ID",
             "schema": {
               "type": "string"
             }
@@ -461,7 +382,17 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/audio_info"
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Task Id"
+                    },
+                    "success": {
+                      "type": "string",
+                      "description": "Task Id"
+                    }
+                  }
                 }
               }
             }
@@ -501,56 +432,29 @@
         }
       }
     },
-    "/api/concat": {
-      "post": {
-        "summary": "Generate the whole song from extensions.",
-        "description": "Concatenate audio clips to generate a complete song using the provided clip ID.",
+    "/api/get_remote_config": {
+      "get": {
+        "summary": "Get config",
         "tags": ["default"],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["clip_id"],
-                "properties": {
-                  "clip_id": {
-                    "type": "string",
-                    "description": "Clip ID"
-                  }
-                }
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "success",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/audio_info"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Clip id is required",
-            "content": {
-              "application/json": {
-                "schema": {
                   "type": "object",
                   "properties": {
-                    "error": {
+                    "implementation": {
                       "type": "string",
-                      "example": "Clip id is required"
+                      "description": "Implementation type"
                     }
                   }
                 }
               }
             }
           },
-          "402": {
-            "description": "Payment required",
+          "400": {
+            "description": "Missing parameter id",
             "content": {
               "application/json": {
                 "schema": {
@@ -558,7 +462,7 @@
                   "properties": {
                     "error": {
                       "type": "string",
-                      "example": "Payment required"
+                      "example": "Missing parameter id"
                     }
                   }
                 }
